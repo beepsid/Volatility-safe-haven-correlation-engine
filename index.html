@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Market Volatility and Safe-Haven Correlation Engine</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #0d1117;
+      color: #c9d1d9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+
+    a {
+      color: #58a6ff;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* HEADER */
+    header {
+      background-color: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 60px 24px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #f0f6fc;
+      margin-bottom: 12px;
+    }
+
+    header p {
+      font-size: 1.1rem;
+      color: #8b949e;
+      max-width: 640px;
+      margin: 0 auto 28px;
+    }
+
+    .badge-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background-color: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.8rem;
+      color: #8b949e;
+    }
+
+    /* MAIN CONTENT */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 60px 24px;
+    }
+
+    section {
+      margin-bottom: 72px;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #f0f6fc;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #21262d;
+    }
+
+    h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #e6edf3;
+      margin: 24px 0 8px;
+    }
+
+    p {
+      color: #8b949e;
+      margin-bottom: 14px;
+    }
+
+    /* ARCHITECTURE */
+    .arch-flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+      margin: 24px 0;
+    }
+
+    .arch-step {
+      background-color: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 14px 20px;
+      text-align: center;
+      min-width: 140px;
+    }
+
+    .arch-step .label {
+      font-size: 0.75rem;
+      color: #58a6ff;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .arch-step .name {
+      font-size: 0.95rem;
+      color: #f0f6fc;
+      font-weight: 500;
+    }
+
+    .arch-arrow {
+      color: #30363d;
+      font-size: 1.4rem;
+      padding: 0 8px;
+    }
+
+    /* FEATURES TABLE */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background-color: #161b22;
+      color: #8b949e;
+      text-align: left;
+      padding: 10px 14px;
+      border: 1px solid #21262d;
+      font-weight: 500;
+    }
+
+    td {
+      padding: 10px 14px;
+      border: 1px solid #21262d;
+      color: #c9d1d9;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #0d1117;
+    }
+
+    tr:nth-child(odd) td {
+      background-color: #161b22;
+    }
+
+    /* CODE BLOCK */
+    pre {
+      background-color: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 20px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      color: #e6edf3;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      margin: 16px 0;
+    }
+
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.85rem;
+      background-color: #161b22;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #e6edf3;
+    }
+
+    /* SCREENSHOTS */
+    .screenshot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 24px;
+    }
+
+    .screenshot-card {
+      background-color: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .screenshot-card:hover {
+      border-color: #58a6ff;
+    }
+
+    .screenshot-card img {
+      width: 100%;
+      display: block;
+      border-bottom: 1px solid #30363d;
+    }
+
+    .screenshot-card .caption {
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      color: #8b949e;
+    }
+
+    .screenshot-card .caption strong {
+      display: block;
+      color: #e6edf3;
+      margin-bottom: 2px;
+      font-size: 0.9rem;
+    }
+
+    /* FINDINGS */
+    .findings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .finding-card {
+      background-color: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .finding-card .number {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #58a6ff;
+      margin-bottom: 6px;
+    }
+
+    .finding-card p {
+      font-size: 0.88rem;
+      color: #8b949e;
+      margin: 0;
+    }
+
+    /* STACK */
+    .stack-list {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .stack-item {
+      background-color: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 0.88rem;
+      color: #c9d1d9;
+    }
+
+    /* FOOTER */
+    footer {
+      background-color: #161b22;
+      border-top: 1px solid #30363d;
+      text-align: center;
+      padding: 32px 24px;
+      font-size: 0.85rem;
+      color: #484f58;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px) {
+      header h1 {
+        font-size: 1.5rem;
+      }
+
+      .screenshot-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .arch-flow {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .arch-arrow {
+        transform: rotate(90deg);
+        padding: 4px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Market Volatility and Safe-Haven Correlation Engine</h1>
+    <p>
+      An end-to-end financial data pipeline analyzing the relationship between
+      Nifty 50 equity volatility and Gold ETF performance during market stress periods.
+    </p>
+    <div class="badge-row">
+      <span class="badge">Python</span>
+      <span class="badge">pandas</span>
+      <span class="badge">yfinance</span>
+      <span class="badge">SQL</span>
+      <span class="badge">Power BI</span>
+      <span class="badge">5 Years of Data</span>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- BUSINESS CASE -->
+    <section>
+      <h2>Business Case</h2>
+      <p>
+        A core question in portfolio risk management is whether gold acts as a reliable
+        safe haven when equity markets drop. This project quantifies that relationship
+        using 5 years of daily market data, engineers financial features from raw prices,
+        and surfaces the findings through an interactive Power BI dashboard.
+      </p>
+      <p>
+        The central hypothesis: on days when the Nifty 50 drops more than 1.5%,
+        does gold tend to hold or gain value?
+      </p>
+    </section>
+
+    <!-- ARCHITECTURE -->
+    <section>
+      <h2>Architecture</h2>
+      <div class="arch-flow">
+        <div class="arch-step">
+          <div class="label">Source</div>
+          <div class="name">yfinance API</div>
+        </div>
+        <div class="arch-arrow">&#8594;</div>
+        <div class="arch-step">
+          <div class="label">Processing</div>
+          <div class="name">Python Pipeline</div>
+        </div>
+        <div class="arch-arrow">&#8594;</div>
+        <div class="arch-step">
+          <div class="label">Storage</div>
+          <div class="name">CSV / PostgreSQL</div>
+        </div>
+        <div class="arch-arrow">&#8594;</div>
+        <div class="arch-step">
+          <div class="label">Visualization</div>
+          <div class="name">Power BI</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section>
+      <h2>Engineered Features</h2>
+      <p>
+        Raw price data is transformed into analytical features before any modeling or visualization.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>nifty_return</code></td>
+            <td>Daily percentage return of Nifty 50</td>
+          </tr>
+          <tr>
+            <td><code>gold_return</code></td>
+            <td>Daily percentage return of GOLDBEES ETF</td>
+          </tr>
+          <tr>
+            <td><code>nifty_vol_30d</code></td>
+            <td>30-day rolling standard deviation of Nifty returns</td>
+          </tr>
+          <tr>
+            <td><code>nifty_rsi_14</code></td>
+            <td>14-day Relative Strength Index</td>
+          </tr>
+          <tr>
+            <td><code>high_vol_flag</code></td>
+            <td>True if Nifty daily return is below -1.5%</td>
+          </tr>
+          <tr>
+            <td><code>gold_on_crash_days</code></td>
+            <td>Gold return on flagged crash days, null otherwise</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- SCREENSHOTS -->
+    <section>
+      <h2>Dashboard and Analysis</h2>
+      <p>
+        The Power BI dashboard connects directly to the engineered dataset and provides
+        interactive filtering by date range and crash day flag. Built with a dark theme
+        for a professional financial aesthetic.
+      </p>
+      <div class="screenshot-grid">
+        <div class="screenshot-card">
+          <img src="screenshots/powerbi dashboard.png" alt="Power BI Dashboard Overview" />
+          <div class="caption">
+            <strong>Full Dashboard</strong>
+            KPI cards, crash day scatter, market trend, and gold correlation visuals
+          </div>
+        </div>
+        <div class="screenshot-card">
+          <img src="screenshots/moving averages.png" alt="Moving Averages Chart" />
+          <div class="caption">
+            <strong>Golden Cross / Death Cross</strong>
+            MA-50 vs MA-200 plotted on a continuous timeline. The Golden Cross in mid-2023 and the developing Death Cross in 2026 are clearly visible.
+          </div>
+        </div>
+        <div class="screenshot-card">
+          <img src="screenshots/gold return during crash.png" alt="Gold Return During Market Crashes" />
+          <div class="caption">
+            <strong>Gold Return During Crashes</strong>
+            Weekly aggregation of gold returns on high volatility Nifty days
+          </div>
+        </div>
+        <div class="screenshot-card">
+          <img src="screenshots/analysis query.png" alt="SQL Analysis Query Results" />
+          <div class="caption">
+            <strong>SQL Analysis</strong>
+            Correlation, volatility buckets, and monthly trend queries
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- KEY FINDINGS -->
+    <section>
+      <h2>Key Findings</h2>
+      <div class="findings-grid">
+        <div class="finding-card">
+          <div class="number">-1.5%</div>
+          <p>Crash day threshold. Days where Nifty drops beyond this are tagged for safe-haven analysis.</p>
+        </div>
+        <div class="finding-card">
+          <div class="number">5 Years</div>
+          <p>Daily historical data from 2021 to 2026, covering multiple market cycles including post-COVID recovery and rate hike periods.</p>
+        </div>
+        <div class="finding-card">
+          <div class="number">Inverse</div>
+          <p>Gold shows a stronger inverse correlation with Nifty returns during high volatility periods than during normal market conditions.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SQL -->
+    <section>
+      <h2>SQL Layer</h2>
+      <p>
+        The database layer models the time-series data with proper indexing and two analytical views
+        built using SQL window functions.
+      </p>
+      <h3>Moving Averages View</h3>
+      <pre>SELECT trade_date, nifty_price,
+  AVG(nifty_price) OVER (
+    ORDER BY trade_date
+    ROWS BETWEEN 49 PRECEDING AND CURRENT ROW
+  ) AS ma_50,
+  AVG(nifty_price) OVER (
+    ORDER BY trade_date
+    ROWS BETWEEN 199 PRECEDING AND CURRENT ROW
+  ) AS ma_200
+FROM market_data;</pre>
+
+      <h3>Gold Return During Crash Weeks</h3>
+      <pre>SELECT
+  DATE_TRUNC('week', trade_date) AS week,
+  AVG(gold_return) AS avg_gold_return,
+  COUNT(*) AS crash_days
+FROM market_data
+WHERE high_vol_flag = TRUE
+GROUP BY week
+ORDER BY week;</pre>
+    </section>
+
+    <!-- HOW TO RUN -->
+    <section>
+      <h2>How to Run</h2>
+      <h3>1. Install dependencies</h3>
+      <pre>pip install yfinance pandas numpy</pre>
+
+      <h3>2. Run the pipeline</h3>
+      <pre>python script/data_pipeline.py</pre>
+
+      <h3>3. Open the dashboard</h3>
+      <p>
+        Load <code>data/market_data.csv</code> into Power BI via Get Data > Text/CSV,
+        then open <code>dashboard/PowerBI_Dashboard.pbix</code>.
+      </p>
+
+      <h3>4. Optional: PostgreSQL</h3>
+      <p>
+        Run <code>sql/create_table.sql</code> to create the schema, then load the CSV
+        into the table using pgAdmin or the COPY command.
+      </p>
+    </section>
+
+    <!-- TECH STACK -->
+    <section>
+      <h2>Tech Stack</h2>
+      <div class="stack-list">
+        <div class="stack-item">Python 3.13</div>
+        <div class="stack-item">yfinance</div>
+        <div class="stack-item">pandas</div>
+        <div class="stack-item">numpy</div>
+        <div class="stack-item">PostgreSQL</div>
+        <div class="stack-item">Power BI Desktop</div>
+        <div class="stack-item">SQL Window Functions</div>
+        <div class="stack-item">DAX</div>
+      </div>
+    </section>
+
+    <!-- REPO LINK -->
+    <section>
+      <h2>Source Code</h2>
+      <p>
+        Full source code, SQL scripts, and the Power BI file are available on
+        <a href="https://github.com/yourusername/Volatility-safe-haven-correlation-engine" target="_blank">
+          GitHub
+        </a>.
+      </p>
+    </section>
+
+  </main>
+
+  <footer>
+    Market Volatility and Safe-Haven Correlation Engine. Built as a financial data engineering portfolio project.
+  </footer>
+
+</body>
+</html>
