@@ -69,6 +69,13 @@ def run_pipeline():
     
     print(df['high_vol_flag'].value_counts())
 
+    df.rename(columns={
+    '^NSEI': 'nifty_price',
+    'GOLDBEES.NS': 'gold_price'
+    }, inplace=True)
+
+    df.index.name = 'trade_date'
+
     df.to_csv("data/market_data.csv")
 
     print("Pipeline complete. Data saved to /data")
